@@ -18,6 +18,7 @@ requirements = [
     "django-environ",
     "django-filter",
     "jsonschema",
+    "jwcrypto",
 ]
 
 test_requirements = []
