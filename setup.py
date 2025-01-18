@@ -19,6 +19,7 @@ requirements = [
     "django-filter",
     "jsonschema",
     "jwcrypto",
+    "fhir.resources>=7.1.0,<8.0.0",
 ]
 
 test_requirements = []
