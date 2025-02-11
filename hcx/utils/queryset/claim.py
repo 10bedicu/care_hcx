@@ -1,5 +1,5 @@
-from hcx.models.claim import Claim
 from care.utils.queryset.facility import get_facility_queryset
+from hcx.models.claim import Claim
 
 
 def get_claims(user, queryset=Claim.objects.all()):

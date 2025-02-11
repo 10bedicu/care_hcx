@@ -1,19 +1,17 @@
+from django.shortcuts import HttpResponse
+from django.urls import path
+from rest_framework.routers import DefaultRouter
+
 from hcx.api.viewsets.claim import ClaimViewSet
 from hcx.api.viewsets.communication import CommunicationViewSet
 from hcx.api.viewsets.gateway import HcxGatewayViewSet
-from hcx.api.viewsets.policy import PolicyViewSet
-
 from hcx.api.viewsets.listener import (
     ClaimOnSubmitView,
     CommunicationRequestView,
     CoverageElibilityOnCheckView,
     PreAuthOnSubmitView,
 )
-
-
-from django.shortcuts import HttpResponse
-from django.urls import path
-from rest_framework.routers import DefaultRouter
+from hcx.api.viewsets.policy import PolicyViewSet
 
 
 def healthy(request):

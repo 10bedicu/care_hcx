@@ -4,8 +4,9 @@ import uuid
 from urllib.parse import urlencode
 
 import requests
-from hcx.settings import plugin_settings as settings
 from jwcrypto import jwe, jwk
+
+from hcx.settings import plugin_settings as settings
 
 
 class Hcx:

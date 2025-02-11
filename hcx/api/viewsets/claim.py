@@ -8,9 +8,9 @@ from rest_framework.mixins import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
-from care.utils.queryset.facility import get_facility_queryset
+
 from hcx.api.serializers.claim import ClaimSerializer
-from hcx.models.base import Use, Outcome
+from hcx.models.base import Outcome, Use
 from hcx.models.claim import Claim
 from hcx.utils.queryset.claim import get_claims
 

@@ -1,10 +1,10 @@
 from django.db import models
 
-from hcx.models.claim import Claim
-from hcx.models.json_schema.communication import CONTENT
 from care.users.models import User
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import JSONFieldSchemaValidator
+from hcx.models.claim import Claim
+from hcx.models.json_schema.communication import CONTENT
 
 
 class Communication(BaseModel):

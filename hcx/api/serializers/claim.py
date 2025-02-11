@@ -10,14 +10,12 @@ from care.facility.api.serializers.patient_consultation import (
     PatientConsultationSerializer,
 )
 from care.facility.models.patient_consultation import PatientConsultation
+from care.users.api.serializers.user import UserBaseMinimumSerializer
+from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
 from hcx.api.serializers.policy import PolicySerializer
-from hcx.models.base import (
-    ClaimType, Outcome, Priority, Status, Use
-)
+from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
 from hcx.models.claim import Claim
 from hcx.models.policy import Policy
-from care.users.api.serializers.user import UserBaseMinimumSerializer
-from care.utils.serializers.fields import ExternalIdSerializerField, ChoiceField
 
 TIMESTAMP_FIELDS = (
     "created_date",

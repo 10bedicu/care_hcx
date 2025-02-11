@@ -3,7 +3,7 @@ from rest_framework.serializers import CharField, ModelSerializer, UUIDField
 from care.facility.api.serializers.patient import PatientDetailSerializer
 from care.facility.models.patient import PatientRegistration
 from care.users.api.serializers.user import UserBaseMinimumSerializer
-from care.utils.serializers.fields import ExternalIdSerializerField, ChoiceField
+from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
 from hcx.models.base import Outcome, Priority, Purpose, Status
 from hcx.models.policy import Policy
 

@@ -13,11 +13,13 @@ from rest_framework.viewsets import GenericViewSet
 
 from care.facility.models.file_upload import FileUpload
 from care.facility.models.icd11_diagnosis import ConditionVerificationStatus
+from care.facility.models.patient import PatientRegistration
 from care.facility.models.patient_consultation import PatientConsultation
 from care.facility.static_data.icd11 import get_icd11_diagnosis_object_by_id
 from care.facility.utils.reports.discharge_summary import (
     generate_discharge_report_signed_url,
 )
+from care.utils.static_data.helpers import query_builder
 from hcx.api.serializers.claim import ClaimSerializer
 from hcx.api.serializers.communication import CommunicationSerializer
 from hcx.api.serializers.gateway import (
@@ -26,9 +28,7 @@ from hcx.api.serializers.gateway import (
     SendCommunicationSerializer,
 )
 from hcx.api.serializers.policy import PolicySerializer
-from hcx.models.base import (
-    ClaimType, Priority, Purpose, Status, Use
-)
+from hcx.models.base import ClaimType, Priority, Purpose, Status, Use
 from hcx.models.claim import Claim
 from hcx.models.communication import Communication
 from hcx.models.policy import Policy
@@ -37,8 +37,6 @@ from hcx.utils.fhir import Fhir
 from hcx.utils.hcx import Hcx
 from hcx.utils.hcx.operations import HcxOperations
 from hcx.utils.queryset.communication import get_communications
-from care.utils.static_data.helpers import query_builder
-from care.facility.models.patient import PatientRegistration
 
 
 class HcxGatewayViewSet(GenericViewSet):

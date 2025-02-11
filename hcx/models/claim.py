@@ -2,14 +2,12 @@ from django.db import models
 from django.db.models import JSONField
 
 from care.facility.models.patient import PatientConsultation
-from hcx.models.base import (
-    ClaimType, Outcome, Priority, Status, Use
-)
-from hcx.models.json_schema.claim import ITEMS
-from hcx.models.policy import Policy
 from care.users.models import User
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import JSONFieldSchemaValidator
+from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
+from hcx.models.json_schema.claim import ITEMS
+from hcx.models.policy import Policy
 
 
 class Claim(BaseModel):
