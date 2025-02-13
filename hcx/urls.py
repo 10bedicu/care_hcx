@@ -10,10 +10,11 @@ from hcx.viewsets.claim import ClaimViewSet
 from hcx.viewsets.coverage import CoverageViewSet
 
 router = DefaultRouter()
+callback_router = DefaultRouter(trailing_slash=False)
 
 router.register("coverage", CoverageViewSet, basename="hcx-coverage")
 router.register("claim", ClaimViewSet, basename="hcx-claim")
-router.register("", CallbacksViewSet, basename="hcx-callbacks")
+callback_router.register("", CallbacksViewSet, basename="hcx-callbacks")
 
 
 router.register(
@@ -31,4 +32,5 @@ router.register(
 
 urlpatterns = [
     *router.urls,
+    *callback_router.urls,
 ]

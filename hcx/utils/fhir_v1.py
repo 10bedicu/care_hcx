@@ -1,9 +1,22 @@
+import base64
 from datetime import UTC, datetime
 from functools import wraps
 from uuid import uuid4
 
 from fhir.resources.R4B.address import Address
+from fhir.resources.R4B.attachment import Attachment
 from fhir.resources.R4B.bundle import Bundle, BundleEntry
+from fhir.resources.R4B.claim import (
+    Claim,
+    ClaimCareTeam,
+    ClaimDiagnosis,
+    ClaimInsurance,
+    ClaimItem,
+    ClaimPayee,
+    ClaimProcedure,
+    ClaimRelated,
+    ClaimSupportingInfo,
+)
 from fhir.resources.R4B.codeableconcept import CodeableConcept
 from fhir.resources.R4B.coding import Coding
 from fhir.resources.R4B.condition import Condition
@@ -16,19 +29,23 @@ from fhir.resources.R4B.coverageeligibilityrequest import (
 from fhir.resources.R4B.humanname import HumanName
 from fhir.resources.R4B.identifier import Identifier
 from fhir.resources.R4B.meta import Meta
+from fhir.resources.R4B.money import Money
 from fhir.resources.R4B.organization import Organization
 from fhir.resources.R4B.patient import Patient
 from fhir.resources.R4B.period import Period
 from fhir.resources.R4B.practitioner import Practitioner
+from fhir.resources.R4B.quantity import Quantity
 from fhir.resources.R4B.reference import Reference
 from fhir.resources.R4B.resource import Resource
 
 from care.emr.models.base import EMRBaseModel
 from care.emr.models.condition import Condition as ConditionModel
+from care.emr.models.file_upload import FileUpload
 from care.emr.models.patient import Patient as PatientModel
 from care.emr.resources.base import Coding as CodingSpec
 from care.facility.models import Facility as FacilityModel
 from care.users.models import User as UserModel
+from hcx.models.claim import Claim as ClaimModel
 from hcx.models.coverage import Coverage as CoverageModel
 from hcx.models.coverage import (
     CoverageEligibilityRequest as CoverageEligibilityRequestModel,
@@ -262,6 +279,15 @@ class Fhir:
             subject=self._reference(self._patient(condition.patient)),
         )
 
+    @cache_profiles(Coding.get_resource_type())
+    def _attachment(self, attachment: FileUpload):
+        id = str(attachment.external_id)
+        content_type, content = attachment.files_manager.file_contents(attachment)
+
+        return Attachment(
+            id=id, contentType=content_type, data=base64.b64encode(content)
+        )
+
     def _coding(self, coding: CodingSpec | None):
         if coding is None:
             return None
@@ -309,8 +335,8 @@ class Fhir:
                 self._reference(
                     self._organization(
                         FacilityModel(
-                            id=coverage.payor["identifier"],
-                            name=coverage.payor["name"],
+                            id=coverage.payor.get("identifier"),
+                            name=coverage.payor.get("name"),
                         )
                     )
                 )
@@ -348,8 +374,8 @@ class Fhir:
             insurer=self._reference(
                 self._organization(
                     FacilityModel(
-                        id=request.coverage.payor["identifier"],
-                        name=request.coverage.payor["name"],
+                        id=request.coverage.payor.get("identifier"),
+                        name=request.coverage.payor.get("name"),
                     )
                 )
             ),
@@ -358,6 +384,210 @@ class Fhir:
                     coverage=self._reference(self._coverage(request.coverage))
                 )
             ],
+        )
+
+    def _claim(self, claim: ClaimModel):
+        id = str(claim.external_id)
+        coverage = CoverageModel.objects.filter(
+            external_id=claim.insurance[0].get("coverage")
+        ).first()
+
+        return Claim(
+            id=id,
+            meta=Meta(
+                profile=[
+                    "https://ig.hcxprotocol.io/v0.7.1/StructureDefinition-Claim.html"
+                ],
+            ),
+            identifier=[Identifier(value=id)],
+            status=claim.status,
+            type=CodeableConcept(
+                coding=[
+                    Coding(
+                        system="http://terminology.hl7.org/CodeSystem/claim-type",
+                        code=claim.type,
+                    )
+                ]
+            ),
+            use=claim.use,
+            priority=CodeableConcept(
+                coding=[
+                    Coding(
+                        system="http://terminology.hl7.org/CodeSystem/processpriority",
+                        code=claim.priority,
+                    )
+                ]
+            ),
+            created=claim.created_date.isoformat(),
+            billablePeriod=Period(**claim.billable_period)
+            if claim.billable_period
+            else None,
+            patient=self._reference(self._patient(claim.patient)),
+            enterer=self._reference(self._practitioner(claim.created_by)),
+            provider=self._reference(self._organization(claim.facility)),
+            insurer=self._reference(
+                self._organization(
+                    FacilityModel(
+                        id=coverage.payor.get("identifier"),
+                        name=coverage.payor.get("name"),
+                    )
+                )
+            ),
+            insurance=[
+                ClaimInsurance(
+                    sequence=insurance.get("sequence"),
+                    focal=insurance.get("focal"),
+                    coverage=self._reference(
+                        self._coverage(
+                            CoverageModel.objects.filter(
+                                external_id=insurance.get("coverage")
+                            ).first()
+                        )
+                    ),
+                )
+                for insurance in claim.insurance
+            ],
+            payee=ClaimPayee(
+                type=CodeableConcept(
+                    coding=[
+                        Coding(
+                            system="http://terminology.hl7.org/CodeSystem/payeetype",
+                            code="provider",
+                        )
+                    ],
+                ),
+                party=self._reference(self._organization(claim.facility)),
+            ),
+            related=[
+                ClaimRelated(
+                    claim=self._reference(self._claim(related.get("claim"))),
+                    relationship=CodeableConcept(
+                        coding=[
+                            Coding(
+                                system="http://hl7.org/fhir/ValueSet/related-claim-relationship",
+                                code=related.get("relationship"),
+                            )
+                        ]
+                    ),
+                )
+                for related in claim.related
+            ]
+            if claim.related
+            else None,
+            careTeam=[
+                ClaimCareTeam(
+                    sequence=care_team.get("sequence"),
+                    provider=self._reference(
+                        self._practitioner(
+                            UserModel.objects.filter(
+                                external_id=care_team.get("provider")
+                            ).first()
+                        )
+                    ),
+                    responsible=care_team.get("responsible"),
+                )
+                for care_team in claim.care_team
+            ]
+            if claim.care_team
+            else [
+                ClaimCareTeam(
+                    sequence=1,
+                    provider=self._reference(self._organization(claim.facility)),
+                    responsible=True,
+                )
+            ],
+            diagnosis=[
+                ClaimDiagnosis(
+                    sequence=diagnosis.get("sequence"),
+                    diagnosisReference=self._reference(
+                        self._condition(
+                            ConditionModel.objects.filter(
+                                external_id=diagnosis.get("diagnosis")
+                            ).first()
+                        )
+                    ),
+                )
+                for diagnosis in claim.diagnosis
+            ]
+            if claim.diagnosis
+            else None,
+            procedure=[
+                ClaimProcedure(
+                    sequence=procedure.get("sequence"),
+                    procedureReference=self._reference(
+                        self._condition(
+                            ConditionModel.objects.filter(
+                                external_id=procedure.get("procedure")
+                            ).first()
+                        )
+                    ),
+                    date=procedure.get("date").isoformat()
+                    if procedure.get("date")
+                    else None,
+                )
+                for procedure in claim.procedure
+            ]
+            if claim.procedure
+            else None,
+            supportingInfo=[
+                ClaimSupportingInfo(
+                    sequence=supporting_info.get("sequence"),
+                    category=CodeableConcept(
+                        coding=[
+                            Coding(
+                                system="http://terminology.hl7.org/CodeSystem/claiminformationcategory",
+                                code=supporting_info.get("category"),
+                            )
+                        ]
+                    ),
+                    valueString=supporting_info.get("value"),
+                    valueAttachment=self._attachment(
+                        FileUpload.objects.filter(
+                            external_id=supporting_info.get("attachment")
+                        ).first()
+                    )
+                    if supporting_info.get("attachment")
+                    else None,
+                )
+                for supporting_info in claim.supporting_info
+            ]
+            if claim.supporting_info
+            else None,
+            item=[
+                ClaimItem(
+                    sequence=item.get("sequence"),
+                    productOrService=CodeableConcept(
+                        coding=[
+                            Coding(
+                                system="https://pmjay.gov.in/hbp-package-code",
+                                code=item.get("product_or_service"),
+                            )
+                        ]
+                    ),
+                    unitPrice=Money(
+                        value=item.get("unit_price"),
+                        currency="INR",
+                    ),
+                    quantity=Quantity(
+                        value=item.get("quantity"),
+                    ),
+                    net=Money(
+                        value=item.get("net"),
+                        currency="INR",
+                    ),
+                    careTeamSequence=item.get("care_team_sequence"),
+                    diagnosisSequence=item.get("diagnosis_sequence"),
+                    procedureSequence=item.get("procedure_sequence"),
+                    informationSequence=item.get("information_sequence"),
+                )
+                for item in claim.item
+            ]
+            if claim.item
+            else None,
+            total=Money(
+                value=claim.total,
+                currency="INR",
+            ),
         )
 
     def _bundle_entry(self, resource: Resource):
@@ -384,6 +614,26 @@ class Fhir:
                 self._bundle_entry(
                     self._coverage_eligibility_request(coverage_eligibility_request)
                 ),
+                *[self._bundle_entry(profile) for profile in self.cached_profiles()],
+            ],
+        )
+
+    def create_claim_bundle(self, claim: ClaimModel):
+        id = str(claim.external_id)
+
+        return Bundle(
+            id=id,
+            meta=Meta(
+                profile=[
+                    "https://ig.hcxprotocol.io/v0.7.1/StructureDefinition-ClaimRequestBundle.html"
+                ],
+                lastUpdated=claim.modified_date.isoformat(),
+            ),
+            identifier=Identifier(value=id, system=f"{CARE_IDENTIFIER_SYSTEM}/bundle"),
+            type="collection",
+            timestamp=datetime.now(UTC).isoformat(),
+            entry=[
+                self._bundle_entry(self._claim(claim)),
                 *[self._bundle_entry(profile) for profile in self.cached_profiles()],
             ],
         )
