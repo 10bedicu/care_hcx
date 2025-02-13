@@ -2,6 +2,7 @@ import json
 
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -73,3 +74,29 @@ class CoverageViewSet(
                 "fhir": json.loads(fhir_data.json()),
             }
         )
+
+    @action(detail=False, methods=["GET"])
+    def payors(self, request):
+        payors = Hcx().searchRegistry("roles", "payor")["participants"]
+
+        result = filter(lambda payor: payor["status"] == "Active", payors)
+
+        if query := request.query_params.get("query"):
+            query = query.lower()
+            result = filter(
+                lambda payor: (
+                    query in payor["participant_name"].lower()
+                    or query in payor["participant_code"].lower()
+                ),
+                result,
+            )
+
+        response = [
+            {
+                "name": payor["participant_name"],
+                "code": payor["participant_code"],
+            }
+            for payor in result
+        ]
+
+        return Response(response, status=status.HTTP_200_OK)
