@@ -34,7 +34,12 @@ class ClaimDeprecated(BaseModel):
     )
     error_text = models.TextField(null=True, blank=True)
 
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="claim_deprecated_created_by",
+    )
     last_modified_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -44,4 +49,4 @@ class ClaimDeprecated(BaseModel):
 
     class Meta:
         db_table = "claim_deprecated"
-        managed = False
+        managed = True

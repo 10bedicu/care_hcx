@@ -12,8 +12,6 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
 )
-from care_hcx.hcx.utils.hcx import Hcx
-from care_hcx.hcx.utils.hcx.operations import HcxOperations
 from hcx.models.coverage import Coverage
 from hcx.resources.coverage.spec import (
     CoverageEligibilityRequestSpec,
@@ -22,6 +20,8 @@ from hcx.resources.coverage.spec import (
     CoverageStatusChoices,
 )
 from hcx.utils.fhir_v1 import Fhir
+from hcx.utils.hcx import Hcx
+from hcx.utils.hcx.operations import HcxOperations
 
 
 class CoverageFilter(filters.FilterSet):
