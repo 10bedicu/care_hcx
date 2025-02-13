@@ -5,7 +5,7 @@ from rest_framework.serializers import CharField, ModelSerializer, UUIDField
 from care.users.api.serializers.user import UserBaseMinimumSerializer
 from care.utils.serializers.fields import ChoiceField
 from hcx.models.base import Outcome, Priority, Purpose, Status
-from hcx.models.deprecated.policy import Policy
+from hcx.models.deprecated.policy import PolicyDeprecated as Policy
 
 TIMESTAMP_FIELDS = (
     "created_date",

@@ -28,9 +28,9 @@ from hcx.api.serializers.gateway import (
 )
 from hcx.api.serializers.policy import PolicySerializer
 from hcx.models.base import ClaimType, Priority, Purpose, Status, Use
-from hcx.models.deprecated.claim import Claim
-from hcx.models.deprecated.communication import Communication
-from hcx.models.deprecated.policy import Policy
+from hcx.models.deprecated.claim import ClaimDeprecated as Claim
+from hcx.models.deprecated.communication import CommunicationDeprecated as Communication
+from hcx.models.deprecated.policy import PolicyDeprecated as Policy
 from hcx.static_data.pmjy_packages import PMJYPackage
 from hcx.utils.fhir import Fhir
 from hcx.utils.hcx import Hcx

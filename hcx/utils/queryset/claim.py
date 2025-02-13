@@ -1,5 +1,5 @@
 from care.utils.queryset.facility import get_facility_queryset
-from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.claim import ClaimDeprecated as Claim
 
 
 def get_claims(user, queryset=Claim.objects.all()):
