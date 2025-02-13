@@ -3,7 +3,7 @@ from django.db import models
 from care.users.models import User
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import JSONFieldSchemaValidator
-from hcx.models.claim import Claim
+from hcx.models.deprecated.claim import Claim
 from hcx.models.json_schema.communication import CONTENT
 
 
@@ -22,3 +22,6 @@ class Communication(BaseModel):
         null=True,
         related_name="communication_last_modified_by",
     )
+
+    class Meta:
+        db_table = "communication_deprecated"

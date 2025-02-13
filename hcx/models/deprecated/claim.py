@@ -6,23 +6,19 @@ from care.users.models import User
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import JSONFieldSchemaValidator
 from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
+from hcx.models.deprecated.policy import Policy
 from hcx.models.json_schema.claim import ITEMS
-from hcx.models.policy import Policy
 
 
 class Claim(BaseModel):
     consultation = models.ForeignKey(PatientConsultation, on_delete=models.CASCADE)
-    policy = models.ForeignKey(
-        Policy, on_delete=models.CASCADE
-    )
+    policy = models.ForeignKey(Policy, on_delete=models.CASCADE)
 
     items = JSONField(default=list, validators=[JSONFieldSchemaValidator(ITEMS)])
     total_claim_amount = models.FloatField(blank=True, null=True)
     total_amount_approved = models.FloatField(blank=True, null=True)
 
-    use = models.CharField(
-        choices=Use.choices, max_length=20, default=Use.CLAIM.value
-    )
+    use = models.CharField(choices=Use.choices, max_length=20, default=Use.CLAIM.value)
     status = models.CharField(
         choices=Status.choices, max_length=20, default=Status.ACTIVE.value
     )
@@ -45,3 +41,6 @@ class Claim(BaseModel):
         null=True,
         related_name="claim_last_modified_by",
     )
+
+    class Meta:
+        db_table = "claim_deprecated"

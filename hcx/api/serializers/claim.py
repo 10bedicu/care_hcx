@@ -14,8 +14,8 @@ from care.users.api.serializers.user import UserBaseMinimumSerializer
 from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
 from hcx.api.serializers.policy import PolicySerializer
 from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
-from hcx.models.claim import Claim
-from hcx.models.policy import Policy
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.policy import Policy
 
 TIMESTAMP_FIELDS = (
     "created_date",

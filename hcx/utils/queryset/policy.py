@@ -1,5 +1,5 @@
 from care.utils.queryset.facility import get_facility_queryset
-from hcx.models.policy import Policy
+from hcx.models.deprecated.policy import Policy
 
 
 def get_policies(user, queryset=Policy.objects.all()):

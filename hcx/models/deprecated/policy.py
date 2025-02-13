@@ -37,3 +37,6 @@ class Policy(BaseModel):
         null=True,
         related_name="policy_last_modified_by",
     )
+
+    class Meta:
+        db_table = "policy_deprecated"
