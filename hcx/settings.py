@@ -106,6 +106,7 @@ REQUIRED_SETTINGS = {
     "HCX_ENCRYPTION_PRIVATE_KEY_URL",
     "HCX_IG_URL",
     "HCX_CERT_URL",
+    "BACKEND_DOMAIN",
 }
 
 DEFAULTS = {
@@ -117,7 +118,8 @@ DEFAULTS = {
     "HCX_ENCRYPTION_PRIVATE_KEY_URL": "",
     "HCX_IG_URL": "",
     "HCX_CERT_URL": "",
-    "AUTH_USER_MODEL": "users.User"
+    "AUTH_USER_MODEL": "users.User",
+    "BACKEND_DOMAIN": "",
 }
 
 plugin_settings = PluginSettings(

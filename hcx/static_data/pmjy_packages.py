@@ -3,7 +3,7 @@ from typing import TypedDict
 
 from redis_om import Field, Migrator
 
-from care.utils.static_data.models.base import BaseRedisModel
+# from care.utils.static_data.models.base import BaseRedisModel
 
 
 class PMJYPackageObject(TypedDict):
@@ -13,7 +13,7 @@ class PMJYPackageObject(TypedDict):
     package_name: str
 
 
-class PMJYPackage(BaseRedisModel):
+class PMJYPackage:
     code: str = Field(primary_key=True)
     name: str
     price: str

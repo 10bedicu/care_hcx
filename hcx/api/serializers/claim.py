@@ -6,10 +6,10 @@ from rest_framework.serializers import (
     UUIDField,
 )
 
-from care.facility.api.serializers.patient_consultation import (
-    PatientConsultationSerializer,
-)
-from care.facility.models.patient_consultation import PatientConsultation
+# from care.facility.api.serializers.patient_consultation import (
+#     PatientConsultationSerializer,
+# )
+# from care.facility.models.patient_consultation import PatientConsultation
 from care.users.api.serializers.user import UserBaseMinimumSerializer
 from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
 from hcx.api.serializers.policy import PolicySerializer
@@ -26,12 +26,12 @@ TIMESTAMP_FIELDS = (
 class ClaimSerializer(ModelSerializer):
     id = UUIDField(source="external_id", read_only=True)
 
-    consultation = ExternalIdSerializerField(
-        queryset=PatientConsultation.objects.all(), write_only=True, required=True
-    )
-    consultation_object = PatientConsultationSerializer(
-        source="consultation", read_only=True
-    )
+    # consultation = ExternalIdSerializerField(
+    #     queryset=PatientConsultation.objects.all(), write_only=True, required=True
+    # )
+    # consultation_object = PatientConsultationSerializer(
+    #     source="consultation", read_only=True
+    # )
 
     policy = ExternalIdSerializerField(
         queryset=Policy.objects.all(), write_only=True, required=True
