@@ -1,4 +1,3 @@
-import base64
 from datetime import UTC, datetime
 from functools import wraps
 from uuid import uuid4
@@ -282,10 +281,12 @@ class Fhir:
     @cache_profiles(Coding.get_resource_type())
     def _attachment(self, attachment: FileUpload):
         id = str(attachment.external_id)
-        content_type, content = attachment.files_manager.file_contents(attachment)
+        url = attachment.files_manager.read_signed_url(attachment)
 
         return Attachment(
-            id=id, contentType=content_type, data=base64.b64encode(content)
+            id=id,
+            title=attachment.name,
+            url=url,
         )
 
     def _coding(self, coding: CodingSpec | None):
@@ -535,7 +536,13 @@ class Fhir:
                     category=CodeableConcept(
                         coding=[
                             Coding(
-                                **supporting_info.get("category"),
+                                **(
+                                    supporting_info.get("category")
+                                    or {
+                                        "system": "http://terminology.hl7.org/CodeSystem/claiminformationcategory",
+                                        "code": "info",
+                                    }
+                                ),
                             )
                         ]
                     ),

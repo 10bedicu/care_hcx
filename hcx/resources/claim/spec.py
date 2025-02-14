@@ -272,7 +272,7 @@ class ClaimRetrieveSpec(ClaimSpec):
             mapping["supporting_info"] = []
             for supporting_info in obj.supporting_info:
                 parsed = {**supporting_info}
-                if supporting_info.attachment:
+                if supporting_info.get("attachment"):
                     attachment = FileUpload.objects.get(
                         external_id=supporting_info.get("attachment")
                     )
