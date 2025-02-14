@@ -45,6 +45,7 @@ class CoverageViewSet(
     def perform_destroy(self, instance):
         instance.status = CoverageStatusChoices.entered_in_error
         instance.save()
+        super().perform_destroy(instance)
 
     @extend_schema(
         request=CoverageEligibilityRequestSpec,

@@ -3,12 +3,17 @@ from enum import Enum
 
 from pydantic import UUID4, BaseModel, field_validator, model_validator
 
+from care.emr.fhir.schema.base import Coding
 from care.emr.models.condition import Condition
 from care.emr.models.encounter import Encounter
 from care.emr.models.file_upload import FileUpload
 from care.emr.resources.base import EMRResource
+from care.emr.resources.condition.spec import ConditionSpec
+from care.emr.resources.file_upload.spec import FileUploadRetrieveSpec
+from care.emr.resources.user.spec import UserSpec
 from care.users.models import User
-from hcx.models.claim import Claim
+from care_hcx.hcx.resources.coverage.spec import CoverageReadSpec
+from hcx.models.claim import Claim, ClaimResponse
 from hcx.models.coverage import Coverage
 from hcx.resources.base import PeriodSpec
 
@@ -118,9 +123,9 @@ class ClaimProcedureSpec(BaseModel):
 
 class ClaimSupportingInfoSpec(BaseModel):
     sequence: int
-    category: dict
-    value: str = None
-    attachment: UUID4 = None
+    category: Coding | None = None
+    value: str | None = None
+    attachment: UUID4 | None = None
 
     @field_validator("attachment")
     @classmethod
@@ -139,31 +144,14 @@ class ClaimSupportingInfoSpec(BaseModel):
         return self
 
 
-class ClaimItemCategoryChoices(str, Enum):
-    info = "info"
-    discharge = "discharge"
-    onset = "onset"
-    related = "related"
-    exception = "exception"
-    material = "material"
-    attachment = "attachment"
-    missingtooth = "missingtooth"
-    prosthesis = "prosthesis"
-    other = "other"
-    hospitalized = "hospitalized"
-    employmentimpacted = "employmentimpacted"
-    externalcause = "externalcause"
-    patientreasonforvisit = "patientreasonforvisit"
-
-
 class ClaimItemSpec(BaseModel):
     sequence: int
     care_team_sequence: list[int] = []
     diagnosis_sequence: list[int] = []
     procedure_sequence: list[int] = []
     information_sequence: list[int] = []
-    category: ClaimItemCategoryChoices | None = None
-    product_or_service: str = None
+    category: Coding | None = None
+    product_or_service: Coding
     quantity: int
     unit_price: float
     patient_paid: float = 0
@@ -193,6 +181,11 @@ class ClaimSpec(BaseClaimSpec):
     patient_paid: float = 0
     total: float = 0
 
+    latest_response: dict = None
+
+    created_date: datetime | None = None
+    modified_date: datetime | None = None
+
     @model_validator(mode="after")
     def validate_price(self):
         self.total = sum([item.net for item in self.item])
@@ -213,3 +206,82 @@ class ClaimSpec(BaseClaimSpec):
             obj.encounter = encounter
             obj.patient = encounter.patient
             obj.facility = encounter.facility
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+
+        response = (
+            ClaimResponse.objects.filter(request=obj).order_by("-created_date").first()
+        )
+        if response:
+            mapping["latest_response"] = response.__dict__
+
+
+class ClaimRetrieveSpec(ClaimSpec):
+    created_by: UserSpec | None = None
+    updated_by: UserSpec | None = None
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):  # noqa
+        mapping["id"] = obj.external_id
+
+        if obj.insurance:
+            mapping["insurance"] = []
+            for insurance in obj.insurance:
+                parsed = {**insurance}
+                coverage = Coverage.objects.get(external_id=insurance.get("coverage"))
+                parsed["coverage"] = CoverageReadSpec.serialize(coverage).to_json()
+                mapping["insurance"].append(parsed)
+
+        if obj.related:
+            mapping["related"] = []
+            for related in obj.related:
+                parsed = {**related}
+                claim = Claim.objects.get(external_id=related.get("claim"))
+                parsed["claim"] = ClaimSpec.serialize(claim).to_json()
+                mapping["related"].append(parsed)
+
+        if obj.care_team:
+            mapping["care_team"] = []
+            for care_team in obj.care_team:
+                parsed = {**care_team}
+                user = User.objects.get(external_id=care_team.get("provider"))
+                parsed["provider"] = UserSpec.serialize(user).to_json()
+                mapping["care_team"].append(parsed)
+
+        if obj.diagnosis:
+            mapping["diagnosis"] = []
+            for diagnosis in obj.diagnosis:
+                parsed = {**diagnosis}
+                condition = Condition.objects.get(
+                    external_id=diagnosis.get("diagnosis")
+                )
+                parsed["diagnosis"] = ConditionSpec.serialize(condition).to_json()
+                mapping["diagnosis"].append(parsed)
+
+        if obj.procedure:
+            mapping["procedure"] = []
+            for procedure in obj.procedure:
+                parsed = {**procedure}
+                # procedure = Procedure.objects.get(external_id=procedure.get("procedure"))
+                # parsed["procedure"] = ProcedureReadSpec.serialize(procedure).to_json()
+                mapping["procedure"].append(parsed)
+
+        if obj.supporting_info:
+            mapping["supporting_info"] = []
+            for supporting_info in obj.supporting_info:
+                parsed = {**supporting_info}
+                if supporting_info.attachment:
+                    attachment = FileUpload.objects.get(
+                        external_id=supporting_info.get("attachment")
+                    )
+                    parsed["attachment"] = FileUploadRetrieveSpec.serialize(
+                        attachment
+                    ).to_json()
+                mapping["supporting_info"].append(parsed)
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by).to_json()

@@ -14,7 +14,12 @@ from care.emr.api.viewsets.base import (
 )
 from hcx.models.claim import Claim
 from hcx.models.coverage import Coverage
-from hcx.resources.claim.spec import ClaimSpec, ClaimStatusChoices, ClaimUseChoices
+from hcx.resources.claim.spec import (
+    ClaimRetrieveSpec,
+    ClaimSpec,
+    ClaimStatusChoices,
+    ClaimUseChoices,
+)
 from hcx.utils.fhir_v1 import Fhir
 from hcx.utils.hcx import Hcx
 from hcx.utils.hcx.operations import HcxOperations
@@ -35,12 +40,14 @@ class ClaimViewSet(
 ):
     database_model = Claim
     pydantic_model = ClaimSpec
+    pydantic_retrieve_model = ClaimRetrieveSpec
     filterset_class = ClaimFilter
     filter_backends = [filters.DjangoFilterBackend]
 
     def perform_destroy(self, instance):
         instance.status = ClaimStatusChoices.entered_in_error
         instance.save()
+        super().perform_destroy(instance)
 
     @extend_schema(
         request=None,

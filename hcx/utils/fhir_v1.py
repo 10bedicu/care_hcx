@@ -535,8 +535,7 @@ class Fhir:
                     category=CodeableConcept(
                         coding=[
                             Coding(
-                                system="http://terminology.hl7.org/CodeSystem/claiminformationcategory",
-                                code=supporting_info.get("category"),
+                                **supporting_info.get("category"),
                             )
                         ]
                     ),
@@ -557,12 +556,7 @@ class Fhir:
                 ClaimItem(
                     sequence=item.get("sequence"),
                     productOrService=CodeableConcept(
-                        coding=[
-                            Coding(
-                                system="https://pmjay.gov.in/hbp-package-code",
-                                code=item.get("product_or_service"),
-                            )
-                        ]
+                        coding=[Coding(**item.get("product_or_service"))]
                     ),
                     unitPrice=Money(
                         value=item.get("unit_price"),
