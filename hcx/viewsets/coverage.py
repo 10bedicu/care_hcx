@@ -2,6 +2,7 @@ import json
 
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
+from rest_framework import filters as drf_filters
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -39,8 +40,12 @@ class CoverageViewSet(
     database_model = Coverage
     pydantic_model = CoverageSpec
     pydantic_read_model = CoverageReadSpec
+    filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
     filterset_class = CoverageFilter
-    filter_backends = [filters.DjangoFilterBackend]
+    ordering_fields = [
+        "created_date",
+        "modified_date",
+    ]
 
     def perform_destroy(self, instance):
         instance.status = CoverageStatusChoices.entered_in_error

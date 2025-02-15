@@ -2,6 +2,7 @@ import json
 
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
+from rest_framework import filters as drf_filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -41,8 +42,12 @@ class ClaimViewSet(
     database_model = Claim
     pydantic_model = ClaimSpec
     pydantic_retrieve_model = ClaimRetrieveSpec
+    filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]
     filterset_class = ClaimFilter
-    filter_backends = [filters.DjangoFilterBackend]
+    ordering_fields = [
+        "created_date",
+        "modified_date",
+    ]
 
     def perform_destroy(self, instance):
         instance.status = ClaimStatusChoices.entered_in_error
