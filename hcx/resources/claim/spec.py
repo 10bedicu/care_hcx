@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import UUID4, BaseModel, field_validator, model_validator
+from pydantic import UUID4, BaseModel, Field, field_validator, model_validator
 
 from care.emr.fhir.schema.base import Coding
 from care.emr.models.condition import Condition
@@ -216,7 +216,7 @@ class ClaimSpec(BaseClaimSpec):
     diagnosis: list[ClaimDiagnosisSpec] = []
     procedure: list[ClaimProcedureSpec] = []
     supporting_info: list[ClaimSupportingInfoSpec] = []
-    item: list[ClaimItemSpec] = []
+    item: list[ClaimItemSpec] = Field([], min_length=1)
     patient_paid: float = 0
     total: float = 0
 
