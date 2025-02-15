@@ -7,8 +7,8 @@ from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRBaseViewSet
 from care.utils.notification_handler import send_webpush
-from care_hcx.hcx.utils.fhir_v1 import Fhir
-from care_hcx.hcx.utils.hcx import Hcx
+from hcx.utils.fhir_v1 import Fhir
+from hcx.utils.hcx import Hcx
 
 
 class CallbacksViewSet(EMRBaseViewSet):

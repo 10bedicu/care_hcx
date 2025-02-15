@@ -12,10 +12,49 @@ from care.emr.resources.condition.spec import ConditionSpec
 from care.emr.resources.file_upload.spec import FileUploadRetrieveSpec
 from care.emr.resources.user.spec import UserSpec
 from care.users.models import User
-from care_hcx.hcx.resources.coverage.spec import CoverageReadSpec
 from hcx.models.claim import Claim, ClaimResponse
 from hcx.models.coverage import Coverage
 from hcx.resources.base import PeriodSpec
+from hcx.resources.coverage.spec import CoverageReadSpec
+
+
+class ClaimResponseOutcomeChoices(str, Enum):
+    queued = "queued"
+    complete = "complete"
+    error = "error"
+    partial = "partial"
+
+
+class ClaimResponseSpec(EMRResource):
+    __model__ = ClaimResponse
+    __exclude__ = ["request"]
+    id: UUID4 = None
+    request: UUID4
+    outcome: ClaimResponseOutcomeChoices
+    error: dict | None = None
+    disposition: str | None = None
+    item: dict | None = None
+    add_item: dict | None = None
+    total: dict | None = None
+    total_amount: float | None = None
+
+    created_date: datetime | None = None
+    modified_date: datetime | None = None
+
+    @field_validator("request")
+    @classmethod
+    def validate_request(cls, request):
+        if not Claim.objects.filter(external_id=request).exists():
+            raise ValueError("Claim not found")
+        return request
+
+    def perform_extra_deserialization(self, is_update, obj):
+        claim = Claim.objects.get(external_id=self.request)
+        obj.request = claim
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
 
 
 class BaseClaimSpec(EMRResource):
@@ -181,7 +220,7 @@ class ClaimSpec(BaseClaimSpec):
     patient_paid: float = 0
     total: float = 0
 
-    latest_response: dict = None
+    latest_response: ClaimResponseSpec | None = None
 
     created_date: datetime | None = None
     modified_date: datetime | None = None
@@ -215,7 +254,7 @@ class ClaimSpec(BaseClaimSpec):
             ClaimResponse.objects.filter(request=obj).order_by("-created_date").first()
         )
         if response:
-            mapping["latest_response"] = response.__dict__
+            mapping["latest_response"] = ClaimResponseSpec.serialize(response).to_json()
 
 
 class ClaimRetrieveSpec(ClaimSpec):
@@ -224,7 +263,7 @@ class ClaimRetrieveSpec(ClaimSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):  # noqa
-        mapping["id"] = obj.external_id
+        super().perform_extra_serialization(mapping, obj)
 
         if obj.insurance:
             mapping["insurance"] = []

@@ -7,7 +7,11 @@ from care.emr.models.patient import Patient
 from care.emr.resources.base import EMRResource
 from care.emr.resources.user.spec import UserSpec
 from care.facility.models.facility import Facility
-from hcx.models.coverage import Coverage, CoverageEligibilityRequest
+from hcx.models.coverage import (
+    Coverage,
+    CoverageEligibilityRequest,
+    CoverageEligibilityResponse,
+)
 from hcx.resources.base import PeriodSpec
 
 
@@ -110,6 +114,10 @@ class CoverageSpec(BaseCoverageSpec):
         if not is_update:
             obj.beneficiary = Patient.objects.get(external_id=self.beneficiary)
 
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+
 
 class BaseCoverageEligibilityRequestSpec(EMRResource):
     __model__ = CoverageEligibilityRequest
@@ -158,13 +166,79 @@ class CoverageEligibilityRequestSpec(BaseCoverageEligibilityRequestSpec):
             if self.facility:
                 obj.facility = Facility.objects.get(external_id=self.facility)
 
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
 
-# TODO: Implement the CoverageEligibilityResponseSpec class
-# TODO: Implement the CoverageEligibilityRequestReadSpec class and have last_coverage_eligibility_request as an instance of it
+
+class CoverageEligibilityResponseOutcomeChoices(str, Enum):
+    queued = "queued"
+    complete = "complete"
+    error = "error"
+    partial = "partial"
+
+
+class CoverageEligibilityResponseSpec(EMRResource):
+    __model__ = CoverageEligibilityResponse
+    __exclude__ = ["request"]
+    id: UUID4 = None
+    request: UUID4
+    outcome: CoverageEligibilityResponseOutcomeChoices
+    error: dict | None = None
+    disposition: str | None = None
+
+    created_date: datetime | None = None
+    modified_date: datetime | None = None
+
+    @field_validator("request")
+    @classmethod
+    def validate_request(cls, request):
+        if not CoverageEligibilityRequest.objects.filter(external_id=request).exists():
+            raise ValueError("Claim not found")
+        return request
+
+    def perform_extra_deserialization(self, is_update, obj):
+        claim = CoverageEligibilityRequest.objects.get(external_id=self.request)
+        obj.request = claim
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+
+
+class CoverageEligibilityRequestReadSpec(CoverageEligibilityRequestSpec):
+    latest_coverage_eligibility_response: CoverageEligibilityResponseSpec | None = None
+
+    created_by: UserSpec | None = None
+    updated_by: UserSpec | None = None
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+
+        latest_coverage_eligibility_response = (
+            CoverageEligibilityResponse.objects.filter(
+                request__external_id=obj.external_id
+            )
+            .order_by("-created_date")
+            .first()
+        )
+        if latest_coverage_eligibility_response:
+            mapping["latest_coverage_eligibility_response"] = (
+                CoverageEligibilityResponseSpec.serialize(
+                    latest_coverage_eligibility_response
+                ).to_json()
+            )
+
+        if obj.created_by:
+            mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
+        if obj.updated_by:
+            mapping["updated_by"] = UserSpec.serialize(obj.updated_by).to_json()
 
 
 class CoverageReadSpec(CoverageSpec):
-    last_coverage_eligibility_request: CoverageEligibilityRequestSpec | None = None
+    latest_coverage_eligibility_request: CoverageEligibilityRequestSpec | None = None
+    latest_coverage_eligibility_response: CoverageEligibilityResponseSpec | None = None
 
     created_by: UserSpec | None = None
     updated_by: UserSpec | None = None
@@ -173,19 +247,33 @@ class CoverageReadSpec(CoverageSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
-        mapping["id"] = obj.external_id
+        super().perform_extra_serialization(mapping, obj)
 
-        last_coverage_eligibility_request = (
+        latest_coverage_eligibility_request = (
             CoverageEligibilityRequest.objects.filter(
                 coverage__external_id=obj.external_id
             )
             .order_by("-created_date")
             .first()
         )
-        if last_coverage_eligibility_request:
-            mapping["last_coverage_eligibility_request"] = (
-                CoverageEligibilityRequestSpec.serialize(
-                    last_coverage_eligibility_request
+        if latest_coverage_eligibility_request:
+            mapping["latest_coverage_eligibility_request"] = (
+                CoverageEligibilityRequestReadSpec.serialize(
+                    latest_coverage_eligibility_request
+                ).to_json()
+            )
+
+        latest_coverage_eligibility_response = (
+            CoverageEligibilityResponse.objects.filter(
+                request__coverage__external_id=obj.external_id
+            )
+            .order_by("-created_date")
+            .first()
+        )
+        if latest_coverage_eligibility_response:
+            mapping["latest_coverage_eligibility_response"] = (
+                CoverageEligibilityResponseSpec.serialize(
+                    latest_coverage_eligibility_response
                 ).to_json()
             )
 

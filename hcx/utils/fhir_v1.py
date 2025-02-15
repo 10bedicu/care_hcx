@@ -668,6 +668,7 @@ class Fhir:
             CoverageEligibilityRequestModel.objects.filter(external_id=request_id)
         ).first()
 
+        # TODO: use CoverageEligibilityResponseSpec to create the instance
         coverage_eligibility_response_instance = (
             CoverageEligibilityResponseModel.objects.create(
                 request=coverage_eligibility_request_instance,
@@ -711,6 +712,7 @@ class Fhir:
             0.0,
         )
 
+        # TODO: use ClaimResponseSpec to create the instance
         claim_response_instance = ClaimResponseModel.objects.create(
             request=claim_instance,
             outcome=claim_response.outcome,
