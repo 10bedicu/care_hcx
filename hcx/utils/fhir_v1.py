@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from functools import wraps
+from functools import reduce, wraps
 from uuid import uuid4
 
 from fhir.resources.R4B.address import Address
@@ -16,6 +16,7 @@ from fhir.resources.R4B.claim import (
     ClaimRelated,
     ClaimSupportingInfo,
 )
+from fhir.resources.R4B.claimresponse import ClaimResponse
 from fhir.resources.R4B.codeableconcept import CodeableConcept
 from fhir.resources.R4B.coding import Coding
 from fhir.resources.R4B.condition import Condition
@@ -25,6 +26,7 @@ from fhir.resources.R4B.coverageeligibilityrequest import (
     CoverageEligibilityRequest,
     CoverageEligibilityRequestInsurance,
 )
+from fhir.resources.R4B.coverageeligibilityresponse import CoverageEligibilityResponse
 from fhir.resources.R4B.humanname import HumanName
 from fhir.resources.R4B.identifier import Identifier
 from fhir.resources.R4B.meta import Meta
@@ -45,9 +47,13 @@ from care.emr.resources.base import Coding as CodingSpec
 from care.facility.models import Facility as FacilityModel
 from care.users.models import User as UserModel
 from hcx.models.claim import Claim as ClaimModel
+from hcx.models.claim import ClaimResponse as ClaimResponseModel
 from hcx.models.coverage import Coverage as CoverageModel
 from hcx.models.coverage import (
     CoverageEligibilityRequest as CoverageEligibilityRequestModel,
+)
+from hcx.models.coverage import (
+    CoverageEligibilityResponse as CoverageEligibilityResponseModel,
 )
 from hcx.settings import plugin_settings as settings
 
@@ -638,3 +644,86 @@ class Fhir:
                 *[self._bundle_entry(profile) for profile in self.cached_profiles()],
             ],
         )
+
+    def process_coverage_eligibility_check_response(
+        self, response: dict, headers: dict
+    ):
+        coverage_eligibility_response_bundle = Bundle(**response)
+
+        coverage_eligibility_response = CoverageEligibilityResponse(
+            **next(
+                filter(
+                    lambda entry: isinstance(
+                        entry.resource,
+                        CoverageEligibilityResponse,
+                    ),
+                    coverage_eligibility_response_bundle.entry,
+                )
+            ).resource.dict()
+        )
+
+        # TODO: this is temporary solution, once the CoverageEligibilityRequest is sent in the bundle, use that
+        request_id = coverage_eligibility_response_bundle.id
+        coverage_eligibility_request_instance = (
+            CoverageEligibilityRequestModel.objects.filter(external_id=request_id)
+        ).first()
+
+        coverage_eligibility_response_instance = (
+            CoverageEligibilityResponseModel.objects.create(
+                request=coverage_eligibility_request_instance,
+                outcome=coverage_eligibility_response.outcome,
+                error=coverage_eligibility_response.error,
+                disposition=coverage_eligibility_response.disposition,
+                meta={
+                    "raw_response": response,
+                    "raw_headers": headers,
+                },
+            )
+        )
+
+        return (
+            coverage_eligibility_response_instance,
+            coverage_eligibility_request_instance,
+        )
+
+    def process_claim_response(self, response: dict, headers: dict):
+        claim_response_bundle = Bundle(**response)
+
+        claim_response = ClaimResponse(
+            **next(
+                filter(
+                    lambda entry: isinstance(entry.resource, ClaimResponse),
+                    claim_response_bundle.entry,
+                )
+            ).resource.dict()
+        )
+
+        # TODO: this is temporary solution, once the Claim is sent in the bundle, use that
+        request_id = claim_response_bundle.id
+        claim_instance = ClaimModel.objects.filter(external_id=request_id).first()
+
+        total_amount = reduce(
+            lambda price, acc: price + acc,
+            (
+                float(claim_response_total.amount.value)
+                for claim_response_total in claim_response.total
+            ),
+            0.0,
+        )
+
+        claim_response_instance = ClaimResponseModel.objects.create(
+            request=claim_instance,
+            outcome=claim_response.outcome,
+            error=claim_response.error,
+            disposition=claim_response.disposition,
+            item=claim_response.item,
+            add_item=claim_response.add_item,
+            total=claim_response.total,
+            total_amount=total_amount,
+            meta={
+                "raw_response": response,
+                "raw_headers": headers,
+            },
+        )
+
+        return (claim_response_instance, claim_instance)

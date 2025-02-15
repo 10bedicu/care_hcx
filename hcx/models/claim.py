@@ -30,3 +30,5 @@ class ClaimResponse(EMRBaseModel):
     disposition = models.TextField(null=True, blank=True)
     item = models.JSONField(null=True, blank=True)
     add_item = models.JSONField(null=True, blank=True)
+    total = models.JSONField(null=True, blank=True)
+    total_amount = models.FloatField(null=True, blank=True)
