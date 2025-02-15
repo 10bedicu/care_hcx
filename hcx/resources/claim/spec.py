@@ -220,7 +220,7 @@ class ClaimSpec(BaseClaimSpec):
     patient_paid: float = 0
     total: float = 0
 
-    latest_response: ClaimResponseSpec | None = None
+    latest_claim_response: ClaimResponseSpec | None = None
 
     created_date: datetime | None = None
     modified_date: datetime | None = None
@@ -250,11 +250,13 @@ class ClaimSpec(BaseClaimSpec):
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
 
-        response = (
+        latest_claim_response = (
             ClaimResponse.objects.filter(request=obj).order_by("-created_date").first()
         )
-        if response:
-            mapping["latest_response"] = ClaimResponseSpec.serialize(response).to_json()
+        if latest_claim_response:
+            mapping["latest_claim_response"] = ClaimResponseSpec.serialize(
+                latest_claim_response
+            ).to_json()
 
 
 class ClaimRetrieveSpec(ClaimSpec):

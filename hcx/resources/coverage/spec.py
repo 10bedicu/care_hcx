@@ -68,7 +68,7 @@ class CoverageStatusChoices(str, Enum):
 
 class CoverageKindChoices(str, Enum):
     insurance = "insurance"
-    self_pay = "self_pay"
+    self_pay = "self-pay"
     other = "other"
 
 
