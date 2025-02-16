@@ -6,13 +6,13 @@ from care.users.models import User
 from care.utils.models.base import BaseModel
 from care.utils.models.validators import JSONFieldSchemaValidator
 from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
-from hcx.models.deprecated.policy import PolicyDeprecated
+from hcx.models.deprecated.policy import Policy
 from hcx.models.json_schema.claim import ITEMS
 
 
-class ClaimDeprecated(BaseModel):
+class Claim(BaseModel):
     consultation = models.ForeignKey(PatientConsultation, on_delete=models.CASCADE)
-    policy = models.ForeignKey(PolicyDeprecated, on_delete=models.CASCADE)
+    policy = models.ForeignKey(Policy, on_delete=models.CASCADE)
 
     items = JSONField(default=list, validators=[JSONFieldSchemaValidator(ITEMS)])
     total_claim_amount = models.FloatField(blank=True, null=True)
@@ -34,19 +34,10 @@ class ClaimDeprecated(BaseModel):
     )
     error_text = models.TextField(null=True, blank=True)
 
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="claim_deprecated_created_by",
-    )
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     last_modified_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         related_name="claim_last_modified_by",
     )
-
-    class Meta:
-        db_table = "claim_deprecated"
-        managed = True

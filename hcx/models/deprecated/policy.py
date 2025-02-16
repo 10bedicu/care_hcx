@@ -6,7 +6,7 @@ from care.utils.models.base import BaseModel
 from hcx.models.base import Outcome, Priority, Purpose, Status
 
 
-class PolicyDeprecated(BaseModel):
+class Policy(BaseModel):
     patient = models.ForeignKey(PatientRegistration, on_delete=models.CASCADE)
 
     subscriber_id = models.TextField(null=True, blank=True)
@@ -37,7 +37,3 @@ class PolicyDeprecated(BaseModel):
         null=True,
         related_name="policy_last_modified_by",
     )
-
-    class Meta:
-        db_table = "policy_deprecated"
-        managed = False

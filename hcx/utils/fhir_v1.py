@@ -46,7 +46,7 @@ from care.emr.models.patient import Patient as PatientModel
 from care.emr.resources.base import Coding as CodingSpec
 from care.facility.models import Facility as FacilityModel
 from care.users.models import User as UserModel
-from hcx.models.claim import Claim as ClaimModel
+from hcx.models.claim import ClaimRequest as ClaimRequestModel
 from hcx.models.claim import ClaimResponse as ClaimResponseModel
 from hcx.models.coverage import Coverage as CoverageModel
 from hcx.models.coverage import (
@@ -393,7 +393,7 @@ class Fhir:
             ],
         )
 
-    def _claim(self, claim: ClaimModel):
+    def _claim(self, claim: ClaimRequestModel):
         id = str(claim.external_id)
         coverage = CoverageModel.objects.filter(
             external_id=claim.insurance[0].get("coverage")
@@ -625,7 +625,7 @@ class Fhir:
             ],
         )
 
-    def create_claim_bundle(self, claim: ClaimModel):
+    def create_claim_bundle(self, claim: ClaimRequestModel):
         id = str(claim.external_id)
 
         return Bundle(
@@ -701,7 +701,9 @@ class Fhir:
 
         # TODO: this is temporary solution, once the Claim is sent in the bundle, use that
         request_id = claim_response_bundle.id
-        claim_instance = ClaimModel.objects.filter(external_id=request_id).first()
+        claim_instance = ClaimRequestModel.objects.filter(
+            external_id=request_id
+        ).first()
 
         total_amount = reduce(
             lambda price, acc: price + acc,

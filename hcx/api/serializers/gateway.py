@@ -3,9 +3,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import Serializer, UUIDField
 
 from care.utils.serializers.fields import ExternalIdSerializerField
-from hcx.models.deprecated.claim import ClaimDeprecated as Claim
-from hcx.models.deprecated.communication import CommunicationDeprecated as Communication
-from hcx.models.deprecated.policy import PolicyDeprecated as Policy
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.communication import Communication
+from hcx.models.deprecated.policy import Policy
 
 
 class CheckEligibilitySerializer(Serializer):

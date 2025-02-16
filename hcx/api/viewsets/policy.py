@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from hcx.api.serializers.policy import PolicySerializer
-from hcx.models.deprecated.policy import PolicyDeprecated as Policy
+from hcx.models.deprecated.policy import Policy
 from hcx.utils.queryset.policy import get_policies
 
 

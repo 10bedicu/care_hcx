@@ -13,7 +13,7 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
 )
-from hcx.models.claim import Claim
+from hcx.models.claim import ClaimRequest
 from hcx.models.coverage import Coverage
 from hcx.resources.claim.spec import (
     ClaimRetrieveSpec,
@@ -39,7 +39,7 @@ class ClaimViewSet(
     EMRDestroyMixin,
     EMRBaseViewSet,
 ):
-    database_model = Claim
+    database_model = ClaimRequest
     pydantic_model = ClaimSpec
     pydantic_retrieve_model = ClaimRetrieveSpec
     filter_backends = [filters.DjangoFilterBackend, drf_filters.OrderingFilter]

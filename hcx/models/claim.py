@@ -3,7 +3,7 @@ from django.db import models
 from care.emr.models.base import EMRBaseModel
 
 
-class Claim(EMRBaseModel):
+class ClaimRequest(EMRBaseModel):
     type = models.CharField(max_length=100, null=False, blank=False)
     use = models.CharField(max_length=100, null=False, blank=False)
     status = models.CharField(max_length=100, null=False, blank=False)
@@ -24,7 +24,7 @@ class Claim(EMRBaseModel):
 
 
 class ClaimResponse(EMRBaseModel):
-    request = models.ForeignKey("hcx.Claim", on_delete=models.CASCADE)
+    request = models.ForeignKey("hcx.ClaimResponse", on_delete=models.CASCADE)
     outcome = models.CharField(max_length=100, null=False, blank=False)
     error = models.JSONField(null=True, blank=True)
     disposition = models.TextField(null=True, blank=True)

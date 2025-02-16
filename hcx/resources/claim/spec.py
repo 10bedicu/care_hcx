@@ -12,7 +12,7 @@ from care.emr.resources.condition.spec import ConditionSpec
 from care.emr.resources.file_upload.spec import FileUploadRetrieveSpec
 from care.emr.resources.user.spec import UserSpec
 from care.users.models import User
-from hcx.models.claim import Claim, ClaimResponse
+from hcx.models.claim import ClaimRequest, ClaimResponse
 from hcx.models.coverage import Coverage
 from hcx.resources.base import PeriodSpec
 from hcx.resources.coverage.spec import CoverageReadSpec
@@ -44,12 +44,12 @@ class ClaimResponseSpec(EMRResource):
     @field_validator("request")
     @classmethod
     def validate_request(cls, request):
-        if not Claim.objects.filter(external_id=request).exists():
+        if not ClaimRequest.objects.filter(external_id=request).exists():
             raise ValueError("Claim not found")
         return request
 
     def perform_extra_deserialization(self, is_update, obj):
-        claim = Claim.objects.get(external_id=self.request)
+        claim = ClaimRequest.objects.get(external_id=self.request)
         obj.request = claim
 
     @classmethod
@@ -58,7 +58,7 @@ class ClaimResponseSpec(EMRResource):
 
 
 class BaseClaimSpec(EMRResource):
-    __model__ = Claim
+    __model__ = ClaimRequest
     __exclude__ = ["patient", "facility", "encounter"]
     id: UUID4 = None
 
@@ -117,7 +117,7 @@ class ClaimRelatedSpec(BaseModel):
     @field_validator("claim")
     @classmethod
     def validate_claim(cls, claim):
-        if not Claim.objects.filter(external_id=claim).exists():
+        if not ClaimRequest.objects.filter(external_id=claim).exists():
             raise ValueError("Claim not found")
         return claim
 
@@ -279,7 +279,7 @@ class ClaimRetrieveSpec(ClaimSpec):
             mapping["related"] = []
             for related in obj.related:
                 parsed = {**related}
-                claim = Claim.objects.get(external_id=related.get("claim"))
+                claim = ClaimRequest.objects.get(external_id=related.get("claim"))
                 parsed["claim"] = ClaimSpec.serialize(claim).to_json()
                 mapping["related"].append(parsed)
 
