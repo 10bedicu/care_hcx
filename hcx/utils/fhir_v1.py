@@ -646,20 +646,19 @@ class Fhir:
         )
 
     def process_coverage_eligibility_check_response(
-        self, response: dict, headers: dict
+        self, response: dict, headers: dict | None = None
     ):
-        coverage_eligibility_response_bundle = Bundle(**response)
+        # Using construct to avoid fhir validation errors
+        coverage_eligibility_response_bundle = Bundle.construct(**response)
 
-        coverage_eligibility_response = CoverageEligibilityResponse(
+        coverage_eligibility_response = CoverageEligibilityResponse.construct(
             **next(
                 filter(
-                    lambda entry: isinstance(
-                        entry.resource,
-                        CoverageEligibilityResponse,
-                    ),
+                    lambda entry: entry.get("resource", {}).get("resourceType")
+                    == "CoverageEligibilityResponse",
                     coverage_eligibility_response_bundle.entry,
                 )
-            ).resource.dict()
+            ).get("resource")
         )
 
         # TODO: this is temporary solution, once the CoverageEligibilityRequest is sent in the bundle, use that
@@ -687,16 +686,18 @@ class Fhir:
             coverage_eligibility_request_instance,
         )
 
-    def process_claim_response(self, response: dict, headers: dict):
-        claim_response_bundle = Bundle(**response)
+    def process_claim_response(self, response: dict, headers: dict | None = None):
+        # Using construct to avoid fhir validation errors
+        claim_response_bundle = Bundle.construct(**response)
 
-        claim_response = ClaimResponse(
+        claim_response = ClaimResponse.construct(
             **next(
                 filter(
-                    lambda entry: isinstance(entry.resource, ClaimResponse),
+                    lambda entry: entry.get("resource", {}).get("resourceType")
+                    == "ClaimResponse",
                     claim_response_bundle.entry,
                 )
-            ).resource.dict()
+            ).get("resource")
         )
 
         # TODO: this is temporary solution, once the Claim is sent in the bundle, use that
@@ -708,7 +709,7 @@ class Fhir:
         total_amount = reduce(
             lambda price, acc: price + acc,
             (
-                float(claim_response_total.amount.value)
+                float(claim_response_total.get("amount", {}).get("value", 0))
                 for claim_response_total in claim_response.total
             ),
             0.0,
@@ -721,7 +722,7 @@ class Fhir:
             error=claim_response.error,
             disposition=claim_response.disposition,
             item=claim_response.item,
-            add_item=claim_response.add_item,
+            add_item=claim_response.addItem,
             total=claim_response.total,
             total_amount=total_amount,
             meta={
