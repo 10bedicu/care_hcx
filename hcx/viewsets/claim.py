@@ -94,3 +94,18 @@ class ClaimViewSet(
                 "fhir": json.loads(fhir_data.json()),
             }
         )
+
+    @extend_schema(
+        request=None,
+        responses={200: ClaimRetrieveSpec},
+    )
+    @action(detail=False, methods=["GET"])
+    def latest(self, request, *args, **kwargs):
+        filtered_qs = self.filter_queryset(self.get_queryset())
+
+        try:
+            claim = filtered_qs.latest("created_date")
+        except ClaimRequest.DoesNotExist:
+            return Response({})
+
+        return Response(self.get_retrieve_pydantic_model().serialize(claim).to_json())
