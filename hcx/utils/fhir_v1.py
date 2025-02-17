@@ -284,7 +284,6 @@ class Fhir:
             subject=self._reference(self._patient(condition.patient)),
         )
 
-    @cache_profiles(Coding.get_resource_type())
     def _attachment(self, attachment: FileUpload):
         id = str(attachment.external_id)
         url = attachment.files_manager.read_signed_url(attachment)
