@@ -13,6 +13,7 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
 )
+from care.emr.models.condition import Condition
 from hcx.models.claim import ClaimRequest
 from hcx.models.coverage import Coverage
 from hcx.resources.claim.spec import (
@@ -48,6 +49,15 @@ class ClaimViewSet(
         "created_date",
         "modified_date",
     ]
+
+    def perform_create(self, instance):
+        diagnoses = Condition.objects.filter(encounter=instance.encounter)
+
+        instance.diagnosis = [
+            {"sequence": i, "diagnosis": str(diagnosis.external_id)}
+            for i, diagnosis in enumerate(diagnoses, start=1)
+        ]
+        super().perform_create(instance)
 
     def perform_destroy(self, instance):
         instance.status = ClaimStatusChoices.entered_in_error

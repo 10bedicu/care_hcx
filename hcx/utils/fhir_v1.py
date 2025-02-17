@@ -255,29 +255,31 @@ class Fhir:
 
     @cache_profiles(Condition.get_resource_type())
     def _condition(self, condition: ConditionModel):
-        id = str(condition.id)
+        id = str(condition.external_id)
 
         return Condition(
             id=id,
-            identifier=[Identifier(value=id)],
-            category=[
-                CodeableConcept(
-                    coding=[
-                        Coding(
-                            system="http://terminology.hl7.org/CodeSystem/condition-category",
-                            code=condition.category,
-                        )
-                    ],
-                )
-            ],
-            verificationStatus=CodeableConcept(
-                coding=[
-                    Coding(
-                        system="http://terminology.hl7.org/CodeSystem/condition-ver-status",
-                        code=condition.verification_status,
-                    )
-                ]
-            ),
+            # identifier=[Identifier(value=id)],
+            # category=[
+            #     CodeableConcept(
+            #         coding=[
+            #             Coding(
+            #                 system="http://terminology.hl7.org/CodeSystem/condition-category",
+            #                 code=condition.category,
+            #                 display=condition.category,
+            #             )
+            #         ],
+            #     )
+            # ],
+            # verificationStatus=CodeableConcept(
+            #     coding=[
+            #         Coding(
+            #             system="http://terminology.hl7.org/CodeSystem/condition-ver-status",
+            #             code=condition.verification_status,
+            #             display=condition.verification_status,
+            #         )
+            #     ]
+            # ),
             code=CodeableConcept(
                 coding=[Coding(**condition.code)],
             ),
@@ -512,6 +514,16 @@ class Fhir:
                             ).first()
                         )
                     ),
+                    type=[
+                        CodeableConcept(
+                            coding=[
+                                Coding(
+                                    system="http://terminology.hl7.org/CodeSystem/ex-diagnosistype",
+                                    code="clinical",  # TODO: make this dynamic
+                                )
+                            ]
+                        )
+                    ],
                 )
                 for diagnosis in claim.diagnosis
             ]
