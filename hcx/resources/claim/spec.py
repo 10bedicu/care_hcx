@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import UUID4, BaseModel, Field, field_validator, model_validator
 
-from care.emr.fhir.schema.base import Coding
+from care.emr.resources.common.coding import Coding
 from care.emr.models.condition import Condition
 from care.emr.models.encounter import Encounter
 from care.emr.models.file_upload import FileUpload
