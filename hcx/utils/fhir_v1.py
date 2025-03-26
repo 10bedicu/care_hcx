@@ -43,7 +43,7 @@ from care.emr.models.base import EMRBaseModel
 from care.emr.models.condition import Condition as ConditionModel
 from care.emr.models.file_upload import FileUpload
 from care.emr.models.patient import Patient as PatientModel
-from care.emr.resources.base import Coding as CodingSpec
+from care.emr.resources.common.coding import Coding as CodingSpec
 from care.facility.models import Facility as FacilityModel
 from care.users.models import User as UserModel
 from hcx.models.claim import ClaimRequest as ClaimRequestModel
