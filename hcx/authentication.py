@@ -1,13 +1,14 @@
 import jwt
 import requests
 from cryptography.x509 import load_pem_x509_certificate
-from hcx.settings import plugin_settings as settings
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
-
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken
+
 from care.users.models import User
+from hcx.settings import plugin_settings as settings
+
 
 class HCXAuthentication(JWTAuthentication):
     def authenticate_header(self, request):
@@ -22,7 +23,7 @@ class HCXAuthentication(JWTAuthentication):
             raise AuthenticationFailed("Invalid signature")
         except Exception as e:
             raise InvalidToken({"detail": str(e)})
-        
+
         user = self.get_user()
 
         return user, payload

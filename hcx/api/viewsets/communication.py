@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from hcx.api.serializers.communication import CommunicationSerializer
-from hcx.models.communication import Communication
+from hcx.models.deprecated.communication import Communication
 from hcx.utils.queryset.communication import get_communications
 
 

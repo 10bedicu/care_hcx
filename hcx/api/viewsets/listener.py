@@ -6,12 +6,13 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from hcx.models.claim import Claim
-from hcx.models.communication import Communication
-from hcx.models.policy import Policy
+from care.utils.notification_handler import send_webpush
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.communication import Communication
+from hcx.models.deprecated.policy import Policy
 from hcx.utils.fhir import Fhir
 from hcx.utils.hcx import Hcx
-from care.utils.notification_handler import send_webpush
+
 # from hcx.authentication import HCXAuthentication
 
 

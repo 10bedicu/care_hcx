@@ -1,11 +1,11 @@
 from rest_framework.serializers import CharField, ModelSerializer, UUIDField
 
-from care.facility.api.serializers.patient import PatientDetailSerializer
-from care.facility.models.patient import PatientRegistration
+# from care.facility.api.serializers.patient import PatientDetailSerializer
+# from care.facility.models.patient import PatientRegistration
 from care.users.api.serializers.user import UserBaseMinimumSerializer
-from care.utils.serializers.fields import ExternalIdSerializerField, ChoiceField
+from care.utils.serializers.fields import ChoiceField
 from hcx.models.base import Outcome, Priority, Purpose, Status
-from hcx.models.policy import Policy
+from hcx.models.deprecated.policy import Policy
 
 TIMESTAMP_FIELDS = (
     "created_date",
@@ -16,10 +16,10 @@ TIMESTAMP_FIELDS = (
 class PolicySerializer(ModelSerializer):
     id = UUIDField(source="external_id", read_only=True)
 
-    patient = ExternalIdSerializerField(
-        queryset=PatientRegistration.objects.all(), write_only=True, required=True
-    )
-    patient_object = PatientDetailSerializer(source="patient", read_only=True)
+    # patient = ExternalIdSerializerField(
+    #     queryset=PatientRegistration.objects.all(), write_only=True, required=True
+    # )
+    # patient_object = PatientDetailSerializer(source="patient", read_only=True)
 
     subscriber_id = CharField()
     policy_id = CharField()

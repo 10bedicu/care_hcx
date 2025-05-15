@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 from uuid import uuid4 as uuid
 
-from django.db.models import Q
 from drf_spectacular.utils import extend_schema
 from redis_om import FindQuery
 from rest_framework import status
@@ -11,13 +10,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from care.facility.models.file_upload import FileUpload
-from care.facility.models.icd11_diagnosis import ConditionVerificationStatus
-from care.facility.models.patient_consultation import PatientConsultation
-from care.facility.static_data.icd11 import get_icd11_diagnosis_object_by_id
-from care.facility.utils.reports.discharge_summary import (
-    generate_discharge_report_signed_url,
-)
+# from care.facility.models.file_upload import FileUpload
+# from care.facility.models.icd11_diagnosis import ConditionVerificationStatus
+# from care.facility.models.patient import PatientRegistration
+# from care.facility.models.patient_consultation import PatientConsultation
+# from care.facility.static_data.icd11 import get_icd11_diagnosis_object_by_id
+# from care.facility.utils.reports.discharge_summary import (
+#     generate_discharge_report_signed_url,
+# )
+# from care.utils.static_data.helpers import query_builder
 from hcx.api.serializers.claim import ClaimSerializer
 from hcx.api.serializers.communication import CommunicationSerializer
 from hcx.api.serializers.gateway import (
@@ -26,19 +27,15 @@ from hcx.api.serializers.gateway import (
     SendCommunicationSerializer,
 )
 from hcx.api.serializers.policy import PolicySerializer
-from hcx.models.base import (
-    ClaimType, Priority, Purpose, Status, Use
-)
-from hcx.models.claim import Claim
-from hcx.models.communication import Communication
-from hcx.models.policy import Policy
+from hcx.models.base import ClaimType, Priority, Purpose, Status, Use
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.communication import Communication
+from hcx.models.deprecated.policy import Policy
 from hcx.static_data.pmjy_packages import PMJYPackage
 from hcx.utils.fhir import Fhir
 from hcx.utils.hcx import Hcx
 from hcx.utils.hcx.operations import HcxOperations
 from hcx.utils.queryset.communication import get_communications
-from care.utils.static_data.helpers import query_builder
-from care.facility.models.patient import PatientRegistration
 
 
 class HcxGatewayViewSet(GenericViewSet):
@@ -114,9 +111,10 @@ class HcxGatewayViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         claim = ClaimSerializer(Claim.objects.get(external_id=data["claim"])).data
-        consultation = PatientConsultation.objects.get(
-            external_id=claim["consultation_object"]["id"]
-        )
+        # consultation = PatientConsultation.objects.get(
+        #     external_id=claim["consultation_object"]["id"]
+        # )
+        consultation = None
 
         procedures = []
         if len(consultation.procedure):
@@ -148,10 +146,12 @@ class HcxGatewayViewSet(GenericViewSet):
             )
 
         diagnoses = []
-        for diagnosis_id, is_principal in consultation.diagnoses.filter(
-            verification_status=ConditionVerificationStatus.CONFIRMED
+        for _diagnosis_id, is_principal in consultation.diagnoses.filter(
+            verification_status="confirmed"
+            # verification_status=ConditionVerificationStatus.CONFIRMED
         ).values_list("diagnosis_id", "is_principal"):
-            diagnosis = get_icd11_diagnosis_object_by_id(diagnosis_id)
+            # diagnosis = get_icd11_diagnosis_object_by_id(diagnosis_id)
+            diagnosis = None
             diagnoses.append(
                 {
                     "id": str(uuid()),
@@ -184,19 +184,21 @@ class HcxGatewayViewSet(GenericViewSet):
                         "url": file.read_signed_url(),
                     }
                 ),
-                FileUpload.objects.filter(
-                    Q(associating_id=claim["consultation_object"]["id"])
-                    | Q(associating_id=claim["id"])
-                ),
+                [],
+                # FileUpload.objects.filter(
+                #     Q(associating_id=claim["consultation_object"]["id"])
+                #     | Q(associating_id=claim["id"])
+                # ),
             )
         )
 
         if Use.get(claim["use"]).value == Use.CLAIM.value:
-            discharge_summary_url = generate_discharge_report_signed_url(
-                PatientRegistration.objects.get(
-                    external_id=claim["policy_object"]["patient_object"]["id"]
-                ).id,
-            )
+            # discharge_summary_url = generate_discharge_report_signed_url(
+            #     PatientRegistration.objects.get(
+            #         external_id=claim["policy_object"]["patient_object"]["id"]
+            #     ).id,
+            # )
+            discharge_summary_url = ""
             docs.append(
                 {
                     "type": "DIA",
@@ -283,7 +285,8 @@ class HcxGatewayViewSet(GenericViewSet):
                             "data": file.read_signed_url(),
                         }
                     ),
-                    FileUpload.objects.filter(associating_id=communication["id"]),
+                    [],
+                    # FileUpload.objects.filter(associating_id=communication["id"]),
                 )
             ),
         ]
@@ -357,8 +360,8 @@ class HcxGatewayViewSet(GenericViewSet):
             limit = 20
 
         query = []
-        if q := request.query_params.get("query"):
-            query.append(PMJYPackage.vec % query_builder(q))
+        # if q := request.query_params.get("query"):
+        #     query.append(PMJYPackage.vec % query_builder(q))
 
         results = FindQuery(expressions=query, model=PMJYPackage, limit=limit).execute(
             exhaust_results=False

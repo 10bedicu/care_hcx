@@ -6,18 +6,16 @@ from rest_framework.serializers import (
     UUIDField,
 )
 
-from care.facility.api.serializers.patient_consultation import (
-    PatientConsultationSerializer,
-)
-from care.facility.models.patient_consultation import PatientConsultation
-from hcx.api.serializers.policy import PolicySerializer
-from hcx.models.base import (
-    ClaimType, Outcome, Priority, Status, Use
-)
-from hcx.models.claim import Claim
-from hcx.models.policy import Policy
+# from care.facility.api.serializers.patient_consultation import (
+#     PatientConsultationSerializer,
+# )
+# from care.facility.models.patient_consultation import PatientConsultation
 from care.users.api.serializers.user import UserBaseMinimumSerializer
-from care.utils.serializers.fields import ExternalIdSerializerField, ChoiceField
+from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
+from hcx.api.serializers.policy import PolicySerializer
+from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.policy import Policy
 
 TIMESTAMP_FIELDS = (
     "created_date",
@@ -28,12 +26,12 @@ TIMESTAMP_FIELDS = (
 class ClaimSerializer(ModelSerializer):
     id = UUIDField(source="external_id", read_only=True)
 
-    consultation = ExternalIdSerializerField(
-        queryset=PatientConsultation.objects.all(), write_only=True, required=True
-    )
-    consultation_object = PatientConsultationSerializer(
-        source="consultation", read_only=True
-    )
+    # consultation = ExternalIdSerializerField(
+    #     queryset=PatientConsultation.objects.all(), write_only=True, required=True
+    # )
+    # consultation_object = PatientConsultationSerializer(
+    #     source="consultation", read_only=True
+    # )
 
     policy = ExternalIdSerializerField(
         queryset=Policy.objects.all(), write_only=True, required=True

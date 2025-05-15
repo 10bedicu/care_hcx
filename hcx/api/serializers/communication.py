@@ -1,10 +1,10 @@
 from rest_framework.serializers import CharField, JSONField, ModelSerializer, UUIDField
 
-from hcx.api.serializers.claim import ClaimSerializer
-from hcx.models.claim import Claim
-from hcx.models.communication import Communication
 from care.users.api.serializers.user import UserBaseMinimumSerializer
 from care.utils.serializers.fields import ExternalIdSerializerField
+from hcx.api.serializers.claim import ClaimSerializer
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.communication import Communication
 
 TIMESTAMP_FIELDS = (
     "created_date",

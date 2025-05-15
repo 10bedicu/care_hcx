@@ -1,8 +1,8 @@
-from hcx.models.policy import Policy
 from care.utils.queryset.facility import get_facility_queryset
+from hcx.models.deprecated.policy import Policy
 
 
-def get_policies(user, queryset=Policy.objects.all()):    
+def get_policies(user, queryset=Policy.objects.all()):
     allowed_facilities = get_facility_queryset(user)
     queryset = queryset.filter(
         patient__facility__id__in=allowed_facilities

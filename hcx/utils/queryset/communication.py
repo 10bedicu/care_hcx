@@ -1,5 +1,5 @@
-from hcx.models.communication import Communication
 from care.utils.queryset.facility import get_facility_queryset
+from hcx.models.deprecated.communication import Communication
 
 
 def get_communications(user, queryset=Communication.objects.all()):

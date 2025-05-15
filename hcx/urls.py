@@ -1,52 +1,36 @@
-from hcx.api.viewsets.claim import ClaimViewSet
-from hcx.api.viewsets.communication import CommunicationViewSet
-from hcx.api.viewsets.gateway import HcxGatewayViewSet
-from hcx.api.viewsets.policy import PolicyViewSet
+from rest_framework.routers import DefaultRouter
 
-from hcx.api.viewsets.listener import (
-    ClaimOnSubmitView,
-    CommunicationRequestView,
-    CoverageElibilityOnCheckView,
-    PreAuthOnSubmitView,
+from hcx.api.viewsets.claim import ClaimViewSet as ClaimDeprecatedViewSet
+from hcx.api.viewsets.communication import (
+    CommunicationViewSet as CommunicationDeprecatedViewSet,
+)
+from hcx.api.viewsets.policy import PolicyViewSet as PolicyDeprecatedViewSet
+from hcx.viewsets.callbacks import CallbacksViewSet
+from hcx.viewsets.claim import ClaimViewSet
+from hcx.viewsets.coverage import CoverageViewSet
+
+router = DefaultRouter()
+callback_router = DefaultRouter(trailing_slash=False)
+
+router.register("coverage", CoverageViewSet, basename="hcx-coverage")
+router.register("claim", ClaimViewSet, basename="hcx-claim")
+callback_router.register("", CallbacksViewSet, basename="hcx-callbacks")
+
+
+router.register(
+    "policies_deprecated", PolicyDeprecatedViewSet, basename="hcx-policy-deprecated"
+)
+router.register(
+    "claims_deprecated", ClaimDeprecatedViewSet, basename="hcx-claim-deprecated"
+)
+router.register(
+    "communications_deprecated",
+    CommunicationDeprecatedViewSet,
+    basename="hcx-communication-deprecated",
 )
 
 
-from django.shortcuts import HttpResponse
-from django.urls import path
-from rest_framework.routers import DefaultRouter
-
-
-def healthy(request):
-    return HttpResponse("Hello from care hcx")
-
-
-router = DefaultRouter()
-
-router.register("policy", PolicyViewSet, basename="hcx-policy")
-router.register("claim", ClaimViewSet, basename="hcx-claim")
-router.register("communication", CommunicationViewSet, basename="hcx-communication")
-router.register("", HcxGatewayViewSet, basename="hcx-gateway")
-
 urlpatterns = [
-    path("health", healthy),
-    path(
-        "coverageeligibility/on_check",
-        CoverageElibilityOnCheckView.as_view(),
-        name="hcx_coverage_eligibility_on_check",
-    ),
-    path(
-        "preauth/on_submit",
-        PreAuthOnSubmitView.as_view(),
-        name="hcx_pre_auth_on_submit",
-    ),
-    path(
-        "claim/on_submit",
-        ClaimOnSubmitView.as_view(),
-        name="hcx_claim_on_submit",
-    ),
-    path(
-        "communication/request",
-        CommunicationRequestView.as_view(),
-        name="hcx_communication_on_request",
-    ),
-] + router.urls
+    *router.urls,
+    *callback_router.urls,
+]

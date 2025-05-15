@@ -1,5 +1,7 @@
-from django.db import models
 from typing import Optional
+
+from django.db import models
+
 
 class BaseTextChoices(models.TextChoices):
     """

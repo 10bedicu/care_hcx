@@ -1,49 +1,34 @@
 from django.db import models
-from django.db.models import JSONField
 
-from care.facility.models.patient import PatientConsultation
-from hcx.models.base import (
-    ClaimType, Outcome, Priority, Status, Use
-)
-from hcx.models.json_schema.claim import ITEMS
-from hcx.models.policy import Policy
-from care.users.models import User
-from care.utils.models.base import BaseModel
-from care.utils.models.validators import JSONFieldSchemaValidator
+from care.emr.models.base import EMRBaseModel
 
 
-class Claim(BaseModel):
-    consultation = models.ForeignKey(PatientConsultation, on_delete=models.CASCADE)
-    policy = models.ForeignKey(
-        Policy, on_delete=models.CASCADE
-    )
+class ClaimRequest(EMRBaseModel):
+    type = models.CharField(max_length=100, null=False, blank=False)
+    use = models.CharField(max_length=100, null=False, blank=False)
+    status = models.CharField(max_length=100, null=False, blank=False)
+    priority = models.CharField(max_length=100, null=False, blank=False)
+    facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
+    encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
+    insurance = models.JSONField(null=True, blank=True)
+    billable_period = models.JSONField(null=True, blank=True)
+    related = models.JSONField(null=True, blank=True)
+    care_team = models.JSONField(null=True, blank=True)
+    diagnosis = models.JSONField(null=True, blank=True)
+    procedure = models.JSONField(null=True, blank=True)
+    supporting_info = models.JSONField(null=True, blank=True)
+    item = models.JSONField(null=True, blank=True)
+    patient_paid = models.FloatField(null=True, blank=True)
+    total = models.FloatField(null=True, blank=True)
 
-    items = JSONField(default=list, validators=[JSONFieldSchemaValidator(ITEMS)])
-    total_claim_amount = models.FloatField(blank=True, null=True)
-    total_amount_approved = models.FloatField(blank=True, null=True)
 
-    use = models.CharField(
-        choices=Use.choices, max_length=20, default=Use.CLAIM.value
-    )
-    status = models.CharField(
-        choices=Status.choices, max_length=20, default=Status.ACTIVE.value
-    )
-    priority = models.CharField(
-        choices=Priority.choices, max_length=20, default=Priority.NORMAL.value
-    )
-    type = models.CharField(
-        choices=ClaimType.choices, max_length=20, default=ClaimType.INSTITUTIONAL.value
-    )
-
-    outcome = models.CharField(
-        choices=Outcome.choices, max_length=20, default=None, blank=True, null=True
-    )
-    error_text = models.TextField(null=True, blank=True)
-
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    last_modified_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="claim_last_modified_by",
-    )
+class ClaimResponse(EMRBaseModel):
+    request = models.ForeignKey("hcx.ClaimRequest", on_delete=models.CASCADE)
+    outcome = models.CharField(max_length=100, null=False, blank=False)
+    error = models.JSONField(null=True, blank=True)
+    disposition = models.TextField(null=True, blank=True)
+    item = models.JSONField(null=True, blank=True)
+    add_item = models.JSONField(null=True, blank=True)
+    total = models.JSONField(null=True, blank=True)
+    total_amount = models.FloatField(null=True, blank=True)

@@ -2,10 +2,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import Serializer, UUIDField
 
-from hcx.models.claim import Claim
-from hcx.models.communication import Communication
-from hcx.models.policy import Policy
 from care.utils.serializers.fields import ExternalIdSerializerField
+from hcx.models.deprecated.claim import Claim
+from hcx.models.deprecated.communication import Communication
+from hcx.models.deprecated.policy import Policy
 
 
 class CheckEligibilitySerializer(Serializer):
