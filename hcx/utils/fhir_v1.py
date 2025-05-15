@@ -157,10 +157,16 @@ class Fhir:
                     postalCode=patient.pincode,
                     country="IN",
                 ),
-                Address(
-                    line=[patient.permanent_address],
-                    postalCode=patient.pincode,
-                    country="IN",
+                *(
+                    [
+                        Address(
+                            line=[patient.permanent_address],
+                            postalCode=patient.pincode,
+                            country="IN",
+                        )
+                    ]
+                    if patient.permanent_address != patient.address
+                    else []
                 ),
             ],
         )
@@ -198,7 +204,11 @@ class Fhir:
                     else []
                 ),
             ],
-            gender=user.gender,
+            gender={
+                "1": "male",
+                "2": "female",
+                "3": "other",
+            }.get(user.gender, "unknown"),
             birthDate=user.date_of_birth,
         )
 
