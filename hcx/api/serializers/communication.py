@@ -1,7 +1,8 @@
 from rest_framework.serializers import CharField, JSONField, ModelSerializer, UUIDField
 
-from care.users.api.serializers.user import UserBaseMinimumSerializer
+from care.emr.resources.user.spec import UserRetrieveSpec
 from care.utils.serializers.fields import ExternalIdSerializerField
+from hcx.api.serializers.base import EMRPydanticModelField
 from hcx.api.serializers.claim import ClaimSerializer
 from hcx.models.deprecated.claim import Claim
 from hcx.models.deprecated.communication import Communication
@@ -23,8 +24,16 @@ class CommunicationSerializer(ModelSerializer):
     identifier = CharField(required=False)
     content = JSONField(required=False)
 
-    created_by = UserBaseMinimumSerializer(read_only=True)
-    last_modified_by = UserBaseMinimumSerializer(read_only=True)
+    created_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="created_by",
+        read_only=True,
+    )
+    last_modified_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="last_modified_by",
+        read_only=True,
+    )
 
     class Meta:
         model = Communication

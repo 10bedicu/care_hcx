@@ -6,12 +6,14 @@ from rest_framework.serializers import (
     UUIDField,
 )
 
+from care.emr.resources.user.spec import UserRetrieveSpec
+
 # from care.facility.api.serializers.patient_consultation import (
 #     PatientConsultationSerializer,
 # )
 # from care.facility.models.patient_consultation import PatientConsultation
-from care.users.api.serializers.user import UserBaseMinimumSerializer
 from care.utils.serializers.fields import ChoiceField, ExternalIdSerializerField
+from hcx.api.serializers.base import EMRPydanticModelField
 from hcx.api.serializers.policy import PolicySerializer
 from hcx.models.base import ClaimType, Outcome, Priority, Status, Use
 from hcx.models.deprecated.claim import Claim
@@ -50,8 +52,16 @@ class ClaimSerializer(ModelSerializer):
     outcome = ChoiceField(choices=Outcome.choices, read_only=True)
     error_text = CharField(read_only=True)
 
-    created_by = UserBaseMinimumSerializer(read_only=True)
-    last_modified_by = UserBaseMinimumSerializer(read_only=True)
+    created_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="created_by",
+        read_only=True,
+    )
+    last_modified_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="last_modified_by",
+        read_only=True,
+    )
 
     class Meta:
         model = Claim
