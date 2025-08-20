@@ -2,8 +2,9 @@ from rest_framework.serializers import CharField, ModelSerializer, UUIDField
 
 # from care.facility.api.serializers.patient import PatientDetailSerializer
 # from care.facility.models.patient import PatientRegistration
-from care.users.api.serializers.user import UserBaseMinimumSerializer
+from care.emr.resources.user.spec import UserRetrieveSpec
 from care.utils.serializers.fields import ChoiceField
+from hcx.api.serializers.base import EMRPydanticModelField
 from hcx.models.base import Outcome, Priority, Purpose, Status
 from hcx.models.deprecated.policy import Policy
 
@@ -34,8 +35,16 @@ class PolicySerializer(ModelSerializer):
     outcome = ChoiceField(choices=Outcome.choices, read_only=True)
     error_text = CharField(read_only=True)
 
-    created_by = UserBaseMinimumSerializer(read_only=True)
-    last_modified_by = UserBaseMinimumSerializer(read_only=True)
+    created_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="created_by",
+        read_only=True,
+    )
+    last_modified_by = EMRPydanticModelField(
+        UserRetrieveSpec,
+        source="last_modified_by",
+        read_only=True,
+    )
 
     class Meta:
         model = Policy
